@@ -3,7 +3,7 @@ const TIENDA_CONFIG = {
     telefono: "542657234273",
     moneda: "$",
     // Horarios en formato 24hs
-    horario: { apertura: "19:00", cierre: "23:59" },
+    horario: { apertura: "12:00", cierre: "23:59" },
     // Zonas de envío
     zonas: [
         { nombre: "Zona Centro", costo: 500 },
