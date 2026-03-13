@@ -1,5 +1,5 @@
 const TIENDA_CONFIG = {
-    nombre: "La Estación Gourmet",
+    nombre:         "Rotiseria Fontana",
     telefono: "542657234273",
     moneda: "$",
     // Horarios en formato 24hs
