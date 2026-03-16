@@ -2,134 +2,319 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Panel Admin - MiLocal</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel | Rotiseria XL</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Poppins', sans-serif; background-color: #080808; color: #ffffff; }
+        .font-brand { font-family: 'Bangers', system-ui; }
+        input, textarea, select { background-color: #1a1a1a !important; border: 1px solid rgba(255,255,255,0.05) !important; color: white !important; }
+        input:focus { border-color: #ff6b00 !important; outline: none; }
+        .crazy-gradient { background: linear-gradient(135deg, #ff6b00 0%, #ff8e3c 100%); }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #080808; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #1a1a1a; border-radius: 10px; border: 1px solid #ff6b0033; }
+    </style>
 </head>
-<body class="bg-slate-900 text-white p-6">
-    <div id="admin-login" class="max-w-md mx-auto bg-slate-800 p-8 rounded-2xl shadow-2xl mt-20 text-center">
-        <div class="mb-6 bg-orange-500 w-16 h-16 rounded-full flex items-center justify-center mx-auto shadow-lg shadow-orange-500/20">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+<body class="p-4 md:p-8">
+
+    <!-- Login -->
+    <div id="admin-login" class="max-w-md mx-auto bg-[#1a1a1a] p-10 rounded-[2.5rem] shadow-2xl mt-20 text-center border border-white/5">
+        <div class="mb-6 crazy-gradient w-20 h-20 rounded-full flex items-center justify-center mx-auto shadow-lg shadow-orange-500/20">
+            <i data-lucide="lock" class="text-black w-10 h-10"></i>
         </div>
-        <h1 class="text-xl font-bold mb-4">Acceso Administrativo</h1>
-        <input type="password" id="admin-pass" placeholder="Contraseña" class="w-full bg-slate-700 p-3 rounded-xl outline-none focus:ring-2 focus:ring-orange-500 text-center mb-4">
-        <button onclick="checkPass()" class="w-full bg-orange-600 hover:bg-orange-500 py-3 rounded-xl font-bold transition-all">Ingresar</button>
-        <p id="login-error" class="text-red-400 text-xs mt-3 hidden">Contraseña incorrecta</p>
+        <h1 class="text-3xl font-brand text-[#ff6b00] mb-2 uppercase tracking-wider">Roti XL Admin</h1>
+        <p class="text-gray-400 text-sm mb-8">Gestión de menú, envíos y marca</p>
+        <input type="password" id="admin-pass" placeholder="••••" class="w-full p-4 rounded-2xl text-center text-2xl tracking-widest mb-6">
+        <button onclick="checkPass()" class="w-full crazy-gradient text-black py-4 rounded-2xl font-black hover:scale-[1.02] transition-all">ACCEDER AL PANEL</button>
+        <p id="login-error" class="text-red-500 text-xs mt-4 hidden font-bold">ACCESO DENEGADO</p>
     </div>
 
-    <div id="admin-content" class="hidden">
-        <div class="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 p-4">
-    <div class="bg-slate-800 p-6 rounded-2xl shadow-xl h-fit">
-        <h1 class="text-2xl font-bold mb-6 text-orange-500">Cargar Producto</h1>
-        <form id="admin-form" class="space-y-4">
-            <input type="text" id="p-nombre" placeholder="Nombre del plato" class="w-full bg-slate-700 p-3 rounded-xl outline-none focus:ring-2 focus:ring-orange-500" required>
-            <div class="flex gap-2">
-                <input type="number" id="p-precio" placeholder="Precio" class="w-1/2 bg-slate-700 p-3 rounded-xl outline-none" required>
-                <select id="p-cat" class="w-1/2 bg-slate-700 p-3 rounded-xl outline-none">
-                    <option value="Minutas">Minutas</option>
-                    <option value="Parrilla">Parrilla</option>
-                    <option value="Bebidas">Bebidas</option>
-                </select>
+    <!-- Main Dashboard -->
+    <div id="admin-content" class="hidden max-w-7xl mx-auto pb-20">
+        <header class="flex flex-col md:flex-row justify-between items-center mb-10 gap-4">
+            <div>
+                <h1 class="text-4xl font-brand text-[#ff6b00] tracking-wider" id="display-store-name">ROTISERIA XL</h1>
+                <p class="text-gray-500 text-sm uppercase tracking-widest flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span> Panel de Control Total
+                </p>
             </div>
-            <textarea id="p-desc" placeholder="Descripción corta" class="w-full bg-slate-700 p-3 rounded-xl outline-none h-20"></textarea>
-            <input type="text" id="p-img" placeholder="img/foto.jpg" class="w-full bg-slate-700 p-3 rounded-xl outline-none">
+            <div class="flex gap-3">
+                <button onclick="descargarDataJS()" class="crazy-gradient text-black px-6 py-3 rounded-2xl font-bold flex items-center gap-2 shadow-lg shadow-orange-500/10 hover:scale-105 transition-all">
+                    <i data-lucide="save" class="w-5 h-5"></i> GENERAR DATA.JS
+                </button>
+                <button onclick="location.reload()" class="bg-white/5 p-3 rounded-2xl hover:bg-red-500/20 text-gray-500 hover:text-red-500 transition-all border border-white/5">
+                    <i data-lucide="log-out"></i>
+                </button>
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
             
-            <button type="submit" class="w-full bg-orange-600 hover:bg-orange-500 py-4 rounded-2xl font-bold transition-all shadow-lg shadow-orange-900/20">
-                ➕ Agregar a la lista
-            </button>
-        </form>
+            <!-- Columna Izquierda: Configuraciones y Formularios -->
+            <div class="lg:col-span-4 space-y-8">
+                
+                <!-- 1. Configuración de Tienda -->
+                <section class="bg-[#1a1a1a] p-8 rounded-[2.5rem] border border-white/5">
+                    <h2 class="text-xl font-bold mb-6 flex items-center gap-3">
+                        <i data-lucide="settings" class="text-[#ff6b00]"></i> Configuración General
+                    </h2>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="text-[10px] text-gray-500 font-bold uppercase ml-1">Nombre del Local</label>
+                            <input type="text" id="conf-nombre" class="w-full p-4 rounded-2xl mt-1" oninput="saveConfig()">
+                        </div>
+                        <div>
+                            <label class="text-[10px] text-gray-500 font-bold uppercase ml-1">WhatsApp (con código de país)</label>
+                            <input type="text" id="conf-whatsapp" placeholder="Ej: 54911..." class="w-full p-4 rounded-2xl mt-1" oninput="saveConfig()">
+                        </div>
+                    </div>
+                </section>
 
-        <button onclick="descargarDataJS()" class="w-full mt-6 bg-slate-700 hover:bg-slate-600 text-white py-3 rounded-2xl flex items-center justify-center gap-2 border border-slate-600 transition-all">
-            📥 Descargar archivo data.js
-        </button>
-    </div>
+                <!-- 2. Form Producto -->
+                <section class="bg-[#1a1a1a] p-8 rounded-[2.5rem] border border-white/5">
+                    <h2 class="text-xl font-bold mb-6 flex items-center gap-3">
+                        <i data-lucide="utensils" class="text-[#ff6b00]"></i> Nuevo Producto
+                    </h2>
+                    <form id="product-form" class="space-y-4">
+                        <input type="text" id="p-nombre" placeholder="Nombre del plato" class="w-full p-4 rounded-2xl" required>
+                        <div class="flex gap-4">
+                            <input type="number" id="p-precio" placeholder="Precio" class="w-1/2 p-4 rounded-2xl" required>
+                            <select id="p-cat" class="w-1/2 p-4 rounded-2xl appearance-none">
+                                <option value="Burgers">Burgers</option>
+                                <option value="Papas">Papas</option>
+                                <option value="Pizzas">Pizzas</option>
+                                <option value="Bebidas">Bebidas</option>
+                            </select>
+                        </div>
+                        <textarea id="p-desc" placeholder="Descripción de ingredientes..." class="w-full p-4 rounded-2xl h-24 resize-none"></textarea>
+                        
+                        <!-- Selector de Imagen -->
+                        <div class="space-y-2">
+                            <label class="text-[10px] text-gray-500 font-bold uppercase ml-1 block">Foto del producto</label>
+                            <div class="relative flex items-center bg-[#0f0f0f] rounded-2xl p-2 border border-white/5">
+                                <input type="file" id="p-file" class="hidden" accept="image/*" onchange="handleImageSelect(this)">
+                                <label for="p-file" class="bg-white/5 px-4 py-2 rounded-xl text-xs font-bold cursor-pointer hover:bg-white/10 transition-all flex items-center gap-2">
+                                    <i data-lucide="image" class="w-4 h-4 text-[#ff6b00]"></i> SELECCIONAR
+                                </label>
+                                <span id="p-filename" class="text-[10px] text-gray-400 ml-3 truncate">Sin archivo...</span>
+                            </div>
+                            <input type="hidden" id="p-img">
+                        </div>
 
-    <div class="bg-slate-800 p-6 rounded-2xl shadow-xl overflow-hidden">
-        <h2 class="text-xl font-bold mb-4 text-slate-300">Productos en la lista</h2>
-        <div id="lista-control" class="space-y-3 max-h-[500px] overflow-y-auto pr-2">
+                        <button type="submit" class="w-full bg-white/5 hover:bg-[#ff6b00] hover:text-black py-4 rounded-2xl font-bold border border-white/10 transition-all uppercase tracking-widest text-xs mt-4">
+                            Añadir al Menú
+                        </button>
+                    </form>
+                </section>
+
+                <!-- 3. Form Zonas -->
+                <section class="bg-[#1a1a1a] p-8 rounded-[2.5rem] border border-white/5">
+                    <h2 class="text-xl font-bold mb-6 flex items-center gap-3">
+                        <i data-lucide="truck" class="text-[#ff6b00]"></i> Zonas de Envío
+                    </h2>
+                    <form id="zone-form" class="space-y-4">
+                        <input type="text" id="z-nombre" placeholder="Nombre de zona" class="w-full p-4 rounded-2xl" required>
+                        <input type="number" id="z-costo" placeholder="Costo de envío" class="w-full p-4 rounded-2xl" required>
+                        <button type="submit" class="w-full bg-white/5 hover:bg-[#ff6b00] hover:text-black py-4 rounded-2xl font-bold border border-white/10 transition-all uppercase tracking-widest text-xs">
+                            Añadir Zona
+                        </button>
+                    </form>
+                </section>
             </div>
-    </div>
-</div>
+
+            <!-- Columna Derecha: Listados -->
+            <div class="lg:col-span-8 space-y-8">
+                
+                <!-- Lista Productos -->
+                <div class="bg-[#1a1a1a] p-8 rounded-[2.5rem] border border-white/5">
+                    <h2 class="text-xl font-bold mb-6 flex justify-between items-center">
+                        <span class="flex items-center gap-3"><i data-lucide="list" class="text-[#ff6b00]"></i> Listado de Menú</span>
+                        <span id="prod-count" class="text-xs bg-white/5 px-3 py-1 rounded-full text-gray-400">0 Items</span>
+                    </h2>
+                    <div id="lista-productos" class="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
+                        <!-- Items -->
+                    </div>
+                </div>
+
+                <!-- Lista Zonas -->
+                <div class="bg-[#1a1a1a] p-8 rounded-[2.5rem] border border-white/5">
+                    <h2 class="text-xl font-bold mb-6 flex items-center gap-3">
+                        <i data-lucide="map-pin" class="text-[#ff6b00]"></i> Cobertura y Costos
+                    </h2>
+                    <div id="lista-zonas" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <!-- Zonas -->
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
-    const CLAVE_ADMIN = '1234'; // Cambia tu clave aquí
-    let listaProductos = JSON.parse(localStorage.getItem('mis_productos')) || [];
-
-    function checkPass() {
-        const pass = document.getElementById('admin-pass').value;
-        if(pass === CLAVE_ADMIN) {
-            document.getElementById('admin-login').classList.add('hidden');
-            document.getElementById('admin-content').classList.remove('hidden');
-            renderListaControl();
-        } else {
-            document.getElementById('login-error').classList.remove('hidden');
-        }
-    }
-
-    // Guardar nuevo producto
-    document.getElementById('admin-form').addEventListener('submit', (e) => {
-        e.preventDefault();
-        const nuevo = {
-            id: Date.now(),
-            nombre: document.getElementById('p-nombre').value,
-            precio: parseInt(document.getElementById('p-precio').value),
-            categoria: document.getElementById('p-cat').value,
-            desc: document.getElementById('p-desc').value,
-            img: document.getElementById('p-img').value || 'img/default.jpg'
-        };
-        listaProductos.push(nuevo);
-        localStorage.setItem('mis_productos', JSON.stringify(listaProductos));
-        renderListaControl();
-        e.target.reset();
-    });
-
-    // Dibujar la lista con botones de borrar
-    function renderListaControl() {
-        const container = document.getElementById('lista-control');
-        container.innerHTML = listaProductos.map(p => `
-            <div class="flex justify-between items-center bg-slate-700/50 p-3 rounded-xl border border-slate-600">
-                <div>
-                    <p class="font-bold text-sm">${p.nombre}</p>
-                    <p class="text-xs text-orange-400">$${p.precio}</p>
-                </div>
-                <button onclick="borrarProducto(${p.id})" class="text-red-400 hover:bg-red-400/10 p-2 rounded-lg transition-all">
-                    Borrar
-                </button>
-            </div>
-        `).join('');
-    }
-
-    function borrarProducto(id) {
-        if(confirm("¿Quitar este producto?")) {
-            listaProductos = listaProductos.filter(p => p.id !== id);
-            localStorage.setItem('mis_productos', JSON.stringify(listaProductos));
-            renderListaControl();
-        }
-    }
-
-    // DESCARGA CORREGIDA
-    function descargarDataJS() {
-        if(listaProductos.length === 0) return alert("Carga al menos un producto antes de descargar.");
-
-        const configBase = {
-            nombre: "Rotiseria Fontana",
-            telefono: "542657234273",
-            moneda: "$",
-            pais: "es-AR"
-        };
-
-        const contenido = `const TIENDA_CONFIG = ${JSON.stringify(configBase, null, 4)};\n\nconst productos = ${JSON.stringify(listaProductos, null, 4)};`;
+        const CLAVE_ADMIN = '1234';
         
-        const blob = new Blob([contenido], { type: 'text/javascript' });
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'data.js';
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
-    }
-</script>
+        // Estado inicial
+        let config = JSON.parse(localStorage.getItem('crazy_config')) || {
+            nombre: "Roti XL",
+            whatsapp: "542657234273",
+            moneda: "$",
+            colorPrincipal: "#ff6b00"
+        };
+        let listaProductos = JSON.parse(localStorage.getItem('crazy_productos')) || [];
+        let listaZonas = JSON.parse(localStorage.getItem('crazy_zonas')) || [];
+
+        function checkPass() {
+            const pass = document.getElementById('admin-pass').value;
+            if(pass === CLAVE_ADMIN) {
+                document.getElementById('admin-login').classList.add('hidden');
+                document.getElementById('admin-content').classList.remove('hidden');
+                loadConfig();
+                renderUI();
+            } else {
+                const err = document.getElementById('login-error');
+                err.classList.remove('hidden');
+                setTimeout(() => err.classList.add('hidden'), 2000);
+            }
+        }
+
+        // --- GESTIÓN DE CONFIGURACIÓN ---
+        function loadConfig() {
+            document.getElementById('conf-nombre').value = config.nombre;
+            document.getElementById('conf-whatsapp').value = config.whatsapp;
+            document.getElementById('display-store-name').innerText = config.nombre;
+        }
+
+        function saveConfig() {
+            config.nombre = document.getElementById('conf-nombre').value.toUpperCase();
+            config.whatsapp = document.getElementById('conf-whatsapp').value;
+            document.getElementById('display-store-name').innerText = config.nombre;
+            localStorage.setItem('crazy_config', JSON.stringify(config));
+        }
+
+        // --- GESTIÓN DE IMÁGENES ---
+        function handleImageSelect(input) {
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
+                document.getElementById('p-filename').innerText = file.name;
+                // Generamos la ruta relativa que el cliente usará en su carpeta
+                document.getElementById('p-img').value = `img/productos/${file.name}`;
+            }
+        }
+
+        // --- PRODUCTOS ---
+        document.getElementById('product-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const p = {
+                id: Date.now(),
+                nombre: document.getElementById('p-nombre').value,
+                precio: parseInt(document.getElementById('p-precio').value),
+                categoria: document.getElementById('p-cat').value,
+                desc: document.getElementById('p-desc').value,
+                img: document.getElementById('p-img').value || 'https://placehold.co/400x400/1a1a1a/ff6b00?text=PRODUCTO'
+            };
+            listaProductos.push(p);
+            saveData();
+            e.target.reset();
+            document.getElementById('p-filename').innerText = "Sin archivo...";
+        });
+
+        // --- ZONAS ---
+        document.getElementById('zone-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const z = {
+                id: Date.now(),
+                nombre: document.getElementById('z-nombre').value,
+                costo: parseInt(document.getElementById('z-costo').value)
+            };
+            listaZonas.push(z);
+            saveData();
+            e.target.reset();
+        });
+
+        function saveData() {
+            localStorage.setItem('crazy_productos', JSON.stringify(listaProductos));
+            localStorage.setItem('crazy_zonas', JSON.stringify(listaZonas));
+            renderUI();
+        }
+
+        function renderUI() {
+            // Productos
+            const pCont = document.getElementById('lista-productos');
+            document.getElementById('prod-count').innerText = `${listaProductos.length} Items`;
+            pCont.innerHTML = listaProductos.map(p => `
+                <div class="flex items-center justify-between bg-black/40 p-4 rounded-3xl border border-white/5 group hover:border-[#ff6b00]/30 transition-all">
+                    <div class="flex items-center gap-4 min-w-0">
+                        <div class="w-14 h-14 rounded-xl overflow-hidden flex-shrink-0 border border-white/10">
+                            <img src="${p.img}" class="w-full h-full object-cover" onerror="this.src='https://placehold.co/100x100/1a1a1a/555?text=?'">
+                        </div>
+                        <div class="overflow-hidden">
+                            <p class="font-bold text-white text-sm truncate">${p.nombre}</p>
+                            <p class="text-[10px] text-[#ff6b00] font-black tracking-widest uppercase mt-0.5">${config.moneda} ${p.precio.toLocaleString()}</p>
+                        </div>
+                    </div>
+                    <button onclick="borrarProd(${p.id})" class="text-gray-700 hover:text-red-500 p-3 rounded-full hover:bg-red-500/10 transition-all flex-shrink-0">
+                        <i data-lucide="trash-2" class="w-5 h-5"></i>
+                    </button>
+                </div>
+            `).join('');
+
+            // Zonas
+            const zCont = document.getElementById('lista-zonas');
+            zCont.innerHTML = listaZonas.map(z => `
+                <div class="bg-black/40 p-5 rounded-3xl border border-white/5 flex flex-col items-center text-center relative group">
+                    <p class="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1">${z.nombre}</p>
+                    <p class="text-lg font-black text-[#ff6b00]">${config.moneda}${z.costo}</p>
+                    <button onclick="borrarZona(${z.id})" class="absolute top-2 right-2 text-gray-800 hover:text-red-500 transition-colors">
+                        <i data-lucide="x-circle" class="w-5 h-5"></i>
+                    </button>
+                </div>
+            `).join('');
+
+            lucide.createIcons();
+        }
+
+        function borrarProd(id) {
+            if(confirm("¿Seguro que quieres quitar este plato del menú?")) {
+                listaProductos = listaProductos.filter(p => p.id !== id);
+                saveData();
+            }
+        }
+
+        function borrarZona(id) {
+            if(confirm("¿Eliminar esta zona de envío?")) {
+                listaZonas = listaZonas.filter(z => z.id !== id);
+                saveData();
+            }
+        }
+
+        function descargarDataJS() {
+            if(listaProductos.length === 0) return alert("Carga al menos un producto antes de exportar.");
+            
+            const jsContent = `
+/**
+ * ARCHIVO DE DATOS AUTOGENERADO - CRAZY FOOD
+ * Generado el: ${new Date().toLocaleString()}
+ */
+
+const TIENDA_CONFIG = ${JSON.stringify(config, null, 4)};
+
+const productos = ${JSON.stringify(listaProductos, null, 4)};
+
+const zonasEnvio = ${JSON.stringify(listaZonas, null, 4)};
+            `.trim();
+
+            const blob = new Blob([jsContent], { type: 'text/javascript' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'data.js';
+            a.click();
+            
+            alert("✅ Archivo 'data.js' generado con éxito.\nRecuerda reemplazarlo en tu servidor.");
+        }
+
+        lucide.createIcons();
+    </script>
 </body>
 </html>
