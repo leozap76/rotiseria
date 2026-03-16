@@ -13,25 +13,33 @@ function checkStoreStatus() {
         const ahora = new Date();
         const minActual = (ahora.getHours() * 60) + ahora.getMinutes();
 
-        const [hApe, mApe] = TIENDA_CONFIG.horario.apertura.split(':').map(Number);
-        const [hCie, mCie] = TIENDA_CONFIG.horario.cierre.split(':').map(Number);
+        // Función interna para validar un rango horario
+        const estaEnRango = (apertura, cierre) => {
+            const [hApe, mApe] = apertura.split(':').map(Number);
+            const [hCie, mCie] = cierre.split(':').map(Number);
+            const minApe = (hApe * 60) + mApe;
+            const minCie = (hCie * 60) + mCie;
 
-        const minApe = (hApe * 60) + mApe;
-        const minCie = (hCie * 60) + mCie;
+            if (minApe <= minCie) {
+                // Horario normal (ej: 09:00 a 13:00)
+                return minActual >= minApe && minActual <= minCie;
+            } else {
+                // Horario que cruza medianoche (ej: 18:00 a 01:00)
+                return minActual >= minApe || minActual <= minCie;
+            }
+        };
 
-        let estaAbierto = false;
+        // Verificamos si está abierto en el Turno 1 O en el Turno 2
+        const abiertoTurno1 = estaEnRango(TIENDA_CONFIG.horario.turno1.apertura, TIENDA_CONFIG.horario.turno1.cierre);
+        const abiertoTurno2 = estaEnRango(TIENDA_CONFIG.horario.turno2.apertura, TIENDA_CONFIG.horario.turno2.cierre);
 
-        if (minApe <= minCie) {
-            estaAbierto = minActual >= minApe && minActual <= minCie;
-        } else {
-            estaAbierto = minActual >= minApe || minActual <= minCie;
-        }
+        const estaAbierto = abiertoTurno1 || abiertoTurno2;
         
         updateStatusBadge(estaAbierto);
         return estaAbierto;
     } catch (error) {
         console.error("Error validando horario:", error);
-        return true;
+        return true; // En caso de error, permitimos el pedido por las dudas
     }
 }
 
@@ -211,23 +219,26 @@ function renderCartList() {
     }
 
     listContainer.innerHTML = cart.map(item => `
-        <div class="flex justify-between items-center bg-slate-50 p-3 rounded-xl mb-2">
+        <div class="flex justify-between items-center bg-white p-3 rounded-xl mb-2 shadow-sm">
             <div class="flex-1">
                 <h4 class="font-bold text-slate-800 text-xs">${item.nombre}</h4>
                 <p class="text-[10px] text-slate-500">$ ${item.precio.toLocaleString()}</p>
             </div>
-            <div class="flex items-center gap-2">
-                <button onclick="changeQuantity(${item.id}, -1)" class="w-7 h-7 flex items-center justify-center bg-white rounded-full shadow-sm text-red-500 border border-slate-100">
-                    <i data-lucide="minus" class="w-3 h-3"></i>
+            <div class="flex items-center gap-3">
+                <button onclick="changeQuantity(${item.id}, -1)" 
+                        class="w-8 h-8 flex items-center justify-center bg-[#ea580c] rounded-full shadow-sm text-white hover:scale-110 active:scale-90 transition-all">
+                    <span class="text-lg font-bold leading-none mb-0.5">−</span>
                 </button>
-                <span class="font-bold text-xs w-4 text-center">${item.cantidad}</span>
-                <button onclick="changeQuantity(${item.id}, 1)" class="w-7 h-7 flex items-center justify-center bg-white rounded-full shadow-sm text-orange-600 border border-slate-100">
-                    <i data-lucide="plus" class="w-3 h-3"></i>
+
+                <span class="font-bold text-sm w-4 text-center text-slate-900">${item.cantidad}</span>
+
+                <button onclick="changeQuantity(${item.id}, 1)" 
+                        class="w-8 h-8 flex items-center justify-center bg-[#ea580c] rounded-full shadow-sm text-white hover:scale-110 active:scale-90 transition-all">
+                    <span class="text-lg font-bold leading-none mb-0.5">+</span>
                 </button>
             </div>
         </div>
     `).join('');
 
     actualizarTotalConEnvio();
-    if (window.lucide) lucide.createIcons();
 }
