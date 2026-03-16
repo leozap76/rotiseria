@@ -1,10 +1,10 @@
 const TIENDA_CONFIG = {
-    nombre:         "LA ROTISERIA",
+    nombre: "LA ROTISERIA",
     telefono: "542657234273",
     moneda: "$",
     // Horarios en formato 24hs
     horario: {
-        turno1: { apertura: "09:00", cierre: "13:00" },
+        turno1: { apertura: "09:00", cierre: "16:00" },
         turno2: { apertura: "18:00", cierre: "01:00" }
     },
     // Zonas de envío

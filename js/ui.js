@@ -1,63 +1,101 @@
 function initApp() {
-    document.getElementById('store-name').textContent = TIENDA_CONFIG.nombre;
-    document.getElementById('catalog-container').innerHTML = ''; 
-    renderCategories();
-    renderProducts(productos); 
-    setupSearch();
-    updateUI(); 
+    
+    // 1. PRIMERO REVISAMOS EL HORARIO (Para quitar el "Cargando" de inmediato)
     checkStoreStatus();
+
+    // 2. CARGAMOS EL RESTO PROTEGIDO (Si algo falla aquí, no congelará la web)
+    try { 
+        const storeName = document.getElementById('store-name');
+        if (storeName) storeName.textContent = TIENDA_CONFIG.nombre; 
+    } catch(e) {}
+
+    try { 
+        const catalog = document.getElementById('catalog-container');
+        if (catalog) catalog.innerHTML = ''; 
+    } catch(e) {}
+
+    try { renderCategories(); } catch(e) { console.log("Aviso: renderCategories falló"); }
+    try { renderProducts(productos); } catch(e) { console.log("Aviso: renderProducts falló"); }
+    
+    // Sospecho que setupSearch no existe en tu código actual y esto trababa la app
+    try { setupSearch(); } catch(e) { console.log("Aviso: setupSearch no encontrado (Ignorado)"); }
+    
+    try { updateUI(); } catch(e) { console.log("Aviso: updateUI no encontrado"); }
 }
 
 function checkStoreStatus() {
     try {
+        console.log("Verificando horarios v2..."); // Mensaje para verificar en consola
         const ahora = new Date();
         const minActual = (ahora.getHours() * 60) + ahora.getMinutes();
 
-        // Función interna para validar un rango horario
-        const estaEnRango = (apertura, cierre) => {
-            const [hApe, mApe] = apertura.split(':').map(Number);
-            const [hCie, mCie] = cierre.split(':').map(Number);
-            const minApe = (hApe * 60) + mApe;
-            const minCie = (hCie * 60) + mCie;
+        // Verificamos si existe la configuración de DOS TURNOS en data.js
+        if (TIENDA_CONFIG.horario && TIENDA_CONFIG.horario.turno1) {
+            
+            const estaEnRango = (turno) => {
+                if (!turno || !turno.apertura || !turno.cierre) return false;
+                const [hApe, mApe] = turno.apertura.split(':').map(Number);
+                const [hCie, mCie] = turno.cierre.split(':').map(Number);
+                const minApe = (hApe * 60) + mApe;
+                const minCie = (hCie * 60) + mCie;
+                
+                if (minApe <= minCie) {
+                    return minActual >= minApe && minActual <= minCie;
+                } else {
+                    return minActual >= minApe || minActual <= minCie; // Cruce de medianoche
+                }
+            };
 
-            if (minApe <= minCie) {
-                // Horario normal (ej: 09:00 a 13:00)
-                return minActual >= minApe && minActual <= minCie;
-            } else {
-                // Horario que cruza medianoche (ej: 18:00 a 01:00)
-                return minActual >= minApe || minActual <= minCie;
-            }
-        };
+            const abiertoT1 = estaEnRango(TIENDA_CONFIG.horario.turno1);
+            const abiertoT2 = estaEnRango(TIENDA_CONFIG.horario.turno2);
+            const estaAbierto = abiertoT1 || abiertoT2;
 
-        // Verificamos si está abierto en el Turno 1 O en el Turno 2
-        const abiertoTurno1 = estaEnRango(TIENDA_CONFIG.horario.turno1.apertura, TIENDA_CONFIG.horario.turno1.cierre);
-        const abiertoTurno2 = estaEnRango(TIENDA_CONFIG.horario.turno2.apertura, TIENDA_CONFIG.horario.turno2.cierre);
+            // Calcular próximo horario
+            const [hA1, mA1] = TIENDA_CONFIG.horario.turno1.apertura.split(':').map(Number);
+            const [hA2, mA2] = TIENDA_CONFIG.horario.turno2.apertura.split(':').map(Number);
+            const minA1 = (hA1 * 60) + mA1;
+            const minA2 = (hA2 * 60) + mA2;
 
-        const estaAbierto = abiertoTurno1 || abiertoTurno2;
+            let proximo = "";
+            if (minActual < minA1) proximo = TIENDA_CONFIG.horario.turno1.apertura;
+            else if (minActual >= minA1 && minActual < minA2) proximo = TIENDA_CONFIG.horario.turno2.apertura;
+            else proximo = TIENDA_CONFIG.horario.turno1.apertura; // Siguiente día
+
+            updateStatusBadge(estaAbierto, proximo);
+            return estaAbierto;
+        } 
         
-        updateStatusBadge(estaAbierto);
-        return estaAbierto;
+        // Si no hay configuración de 2 turnos, forzamos ABIERTO para no bloquear
+        updateStatusBadge(true, "");
+        return true;
+
     } catch (error) {
-        console.error("Error validando horario:", error);
-        return true; // En caso de error, permitimos el pedido por las dudas
+        console.error("Error fatal validando horario:", error);
+        // SI OCURRE UN ERROR, QUITAMOS EL "CARGANDO" SÍ O SÍ
+        updateStatusBadge(true, "");
+        return true;
     }
 }
 
-function updateStatusBadge(open) {
-    const badge = document.getElementById('store-status-badge');
-    const dot = document.getElementById('status-dot');
-    const text = document.getElementById('status-text');
-    
-    if (!badge || !dot || !text) return; 
+function updateStatusBadge(abierto, proximo = "") {
+    const badge = document.getElementById('status-badge');
+    if (!badge) return;
 
-    if (open) {
-        badge.className = "mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase bg-emerald-100 text-emerald-700 border border-emerald-200";
-        dot.className = "w-2 h-2 rounded-full bg-emerald-500 animate-pulse";
-        text.textContent = "Abierto ahora";
+    if (abierto) {
+        badge.innerHTML = `
+            <span class="bg-green-500/10 text-green-500 px-3 py-1 rounded-full text-[10px] font-bold border border-green-500/20 tracking-tight">
+                ● ABIERTO AHORA
+            </span>`;
     } else {
-        badge.className = "mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase bg-slate-100 text-slate-500 border border-slate-200";
-        dot.className = "w-2 h-2 rounded-full bg-slate-400";
-        text.textContent = `Cerrado (Abre ${TIENDA_CONFIG.horario.apertura})`;
+        badge.innerHTML = `
+            <div class="flex flex-col items-center gap-1">
+                <span class="bg-red-500/10 text-red-500 px-3 py-1 rounded-full text-[10px] font-bold border border-red-500/20 tracking-tight">
+                    ● CERRADO
+                </span>
+                <span class="text-gray-500 text-[10px] font-medium uppercase tracking-widest">
+                    Abre a las ${proximo} hs
+                </span>
+            </div>`;
     }
 }
 
@@ -241,4 +279,6 @@ function renderCartList() {
     `).join('');
 
     actualizarTotalConEnvio();
+    // Si usas iconos de lucide en otras partes, esto los refresca
+    if (window.lucide) lucide.createIcons();
 }

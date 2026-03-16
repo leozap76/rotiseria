@@ -31,46 +31,30 @@ function iniciarCheckout() {
 function procesarEnvioWhatsApp() {
     try {
         if (!checkStoreStatus()) {
-            alert("El local está cerrado. Nuestro horario es de " + TIENDA_CONFIG.horario.apertura + " a " + TIENDA_CONFIG.horario.cierre);
+            alert("El local se encuentra cerrado en este momento. Intenta de nuevo más tarde.");
             return;
         }
 
-        // Leemos los valores asegurándonos de que no haya espacios en blanco (.trim())
         const nombreElement = document.getElementById('cust-name');
         const direccionElement = document.getElementById('cust-address');
-        const zoneSelect = document.getElementById('cust-zone');
-        const pagoSelect = document.getElementById('cust-payment');
-        
-        const nombre = nombreElement ? nombreElement.value.trim() : '';
-        const direccion = direccionElement ? direccionElement.value.trim() : '';
+        const pagoElement = document.getElementById('cust-payment');
 
-        // Validación estricta
-        if (!nombre || !direccion || !zoneSelect || zoneSelect.value === "") {
-            alert("⚠️ Por favor, completa tu Nombre, Dirección y elige una Zona de Envío.");
+        if (!nombreElement || !direccionElement || !pagoElement) {
+            alert("Error en el formulario. Faltan campos.");
             return;
         }
 
-        const zonaTexto = zoneSelect.options[zoneSelect.selectedIndex].text;
-        const costoEnvio = parseInt(zoneSelect.options[zoneSelect.selectedIndex].getAttribute('data-costo')) || 0;
-        const pago = pagoSelect ? pagoSelect.value : "Efectivo";
+        const nombre = nombreElement.value.trim();
+        const direccion = direccionElement.value.trim();
+        const pago = pagoElement.value;
 
-        let mensaje = `*PEDIDO: ${TIENDA_CONFIG.nombre}*%0A`;
-        mensaje += `*Cliente:* ${nombre}%0A*Dirección:* ${direccion}%0A*Zona:* ${zonaTexto}%0A*Pago:* ${pago}%0A%0A`;
-        
-        let subtotal = 0;
-        cart.forEach(item => {
-            const sub = item.precio * item.cantidad;
-            subtotal += sub;
-            mensaje += `- ${item.cantidad}x ${item.nombre} ($${sub.toLocaleString()})%0A`;
-        });
+        if (!nombre || !direccion) {
+            alert("Por favor, completa tu nombre y dirección.");
+            return;
+        }
 
-        const totalFinal = subtotal + costoEnvio;
-        mensaje += `%0A*Subtotal:* $${subtotal.toLocaleString()}%0A*Envío:* $${costoEnvio.toLocaleString()}%0A*TOTAL: $${totalFinal.toLocaleString()}*`;
-
-        window.open(`https://wa.me/${TIENDA_CONFIG.telefono}?text=${mensaje}`, '_blank');
-        
+        finalizarPedido({ nombre, direccion, pago });
     } catch (error) {
-        // ESTO NOS DIRÁ EXACTAMENTE QUÉ ESTÁ ROTO
         alert("Error técnico: " + error.message);
         console.error("Error al enviar WhatsApp:", error);
     }
