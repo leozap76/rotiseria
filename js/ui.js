@@ -23,6 +23,45 @@ function initApp() {
     try { updateUI(); } catch(e) { console.log("Aviso: updateUI no encontrado"); }
 }
 
+function renderCartList() {
+    const listContainer = document.getElementById('cart-items-list');
+    if (!listContainer) return;
+
+    if (cart.length === 0) {
+        listContainer.innerHTML = `<div class="flex flex-col items-center justify-center h-full text-gray-500 gap-2 py-8"><i data-lucide="shopping-cart" class="w-10 h-10 opacity-20"></i><p>El carrito está vacío</p></div>`;
+        if (typeof actualizarTotalConEnvio === "function") actualizarTotalConEnvio();
+        if (window.lucide) lucide.createIcons();
+        return;
+    }
+
+    listContainer.innerHTML = cart.map(item => {
+        const idLimpio = String(item.cartItemId || item.id);
+
+        return `
+        <div class="flex justify-between items-center bg-[#111] p-4 rounded-2xl mb-3 border border-white/5">
+            <div class="flex-1">
+                <h4 class="font-bold text-white text-sm">${item.nombre}</h4>
+                <p class="text-xs text-[#ff6b00] font-bold mt-1">$ ${(item.precio * item.cantidad).toLocaleString()}</p>
+            </div>
+            <div class="flex items-center gap-4 bg-black px-2 py-1.5 rounded-full border border-white/10">
+                <button type="button" onclick="changeQuantity('${idLimpio}', -1)" 
+                        class="w-8 h-8 flex items-center justify-center bg-white/10 hover:bg-[#ff6b00] rounded-full text-white transition-all cursor-pointer">
+                    <span class="text-xl font-bold leading-none mb-0.5">−</span>
+                </button>
+
+                <span class="font-bold text-sm w-4 text-center text-white">${item.cantidad}</span>
+
+                <button type="button" onclick="changeQuantity('${idLimpio}', 1)" 
+                        class="w-8 h-8 flex items-center justify-center bg-white/10 hover:bg-[#ff6b00] rounded-full text-white transition-all cursor-pointer">
+                    <span class="text-xl font-bold leading-none mb-0.5">+</span>
+                </button>
+            </div>
+        </div>`;
+    }).join('');
+
+    if (typeof actualizarTotalConEnvio === "function") actualizarTotalConEnvio();
+}
+
 function checkStoreStatus() {
     try {
         console.log("Verificando horarios v2..."); // Mensaje para verificar en consola
@@ -133,49 +172,53 @@ function filterByCategory(cat) {
         renderProducts(filtrados);
     }
 }
+function renderProducts(productosToRender) {
+    const catalog = document.getElementById('catalog-container');
+    if (!catalog) return;
 
-function renderProducts(lista) {
-    const container = document.getElementById('catalog-container');
-    if (!container) return;
-    
-    if (lista.length === 0) {
-        container.innerHTML = `
-            <div class="flex flex-col items-center justify-center py-20 text-gray-500">
-                <i data-lucide="frown" class="w-16 h-16 mb-4 opacity-20"></i>
-                <p class="text-xl font-medium">No encontramos lo que buscas</p>
-            </div>`;
+    if (productosToRender.length === 0) {
+        catalog.innerHTML = `<div class="p-8 text-center text-slate-500"><i data-lucide="search-x" class="w-12 h-12 mx-auto mb-3 opacity-20"></i><p>No se encontraron productos.</p></div>`;
         if (window.lucide) lucide.createIcons();
         return;
     }
 
-    container.innerHTML = lista.map(p => `
-        <div class="flex flex-col bg-[#1a1a1a] rounded-[2.5rem] overflow-hidden mb-8 border border-white/5 shadow-2xl group">
-            <div class="relative w-full h-64 sm:h-72 overflow-hidden">
-                <img src="${p.img}" 
-                     alt="${p.nombre}" 
-                     class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                     onerror="this.src='https://placehold.co/600x400/1a1a1a/ff6b00?text=Crazy+Food'">
-                
-                <div class="absolute top-5 right-5 bg-black/70 backdrop-blur-xl text-[#ff6b00] px-5 py-2 rounded-full font-black text-xl border border-[#ff6b00]/30 shadow-2xl">
-                    ${TIENDA_CONFIG.moneda} ${p.precio.toLocaleString()}
-                </div>
-            </div>
+    // CLAVE: grid-cols-1 asegura que SIEMPRE ocupe toda la pantalla
+    catalog.className = "grid grid-cols-1 gap-6 pb-24";
 
-            <div class="p-6 flex flex-col bg-gradient-to-b from-[#1a1a1a] to-[#0f0f0f]">
-                <div class="flex justify-between items-center gap-4">
-                    <div class="flex-1">
-                        <h3 class="font-bold text-white text-2xl mb-1 tracking-tight group-hover:text-[#ff6b00] transition-colors">${p.nombre}</h3>
-                        <p class="text-gray-400 text-sm leading-relaxed line-clamp-2">${p.desc}</p>
-                    </div>
-                    
-                    <button onclick="addToCart(${p.id})" 
-                            class="bg-[#ff6b00] text-black p-4 rounded-2xl shadow-[0_0_20px_rgba(255,107,0,0.3)] hover:shadow-[0_0_30px_rgba(255,107,0,0.5)] transition-all active:scale-90 flex items-center justify-center">
-                        <i data-lucide="plus" class="w-7 h-7 stroke-[3px]"></i>
-                    </button>
+    catalog.innerHTML = productosToRender.map(prod => {
+        let opcionesHTML = '';
+        let precioDisplay = `$ ${prod.precio.toLocaleString()}`;
+        
+        let btnAgregar = `<button type="button" onclick="addToCart(${prod.id})" class="h-10 px-5 flex items-center justify-center bg-[#ff6b00] text-black rounded-xl font-bold shadow-md hover:scale-105 active:scale-95 transition-all uppercase tracking-wide text-xs">Agregar <span class="text-lg leading-none ml-2 mb-0.5">+</span></button>`;
+
+        if (prod.opciones && prod.opciones.length > 0) {
+            precioDisplay = `Desde $${prod.opciones[0].precio.toLocaleString()}`;
+            opcionesHTML = `
+                <select id="opc-${prod.id}" class="mt-3 w-full bg-[#1a1a1a] border border-white/10 text-white text-sm py-2.5 px-3 rounded-xl focus:outline-none focus:border-[#ff6b00] transition-colors appearance-none">
+                    ${prod.opciones.map((op, i) => `<option value="${i}">${op.nombre} - $${op.precio.toLocaleString()}</option>`).join('')}
+                </select>
+            `;
+            btnAgregar = `<button type="button" onclick="addToCart(${prod.id}, document.getElementById('opc-${prod.id}').value)" class="h-10 px-5 flex items-center justify-center bg-[#ff6b00] text-black rounded-xl font-bold shadow-md hover:scale-105 active:scale-95 transition-all uppercase tracking-wide text-xs">Agregar <span class="text-lg leading-none ml-2 mb-0.5">+</span></button>`;
+        }
+
+        return `
+        <div class="bg-[#111] rounded-[2rem] overflow-hidden shadow-lg border border-white/5 flex flex-col">
+            <div class="relative w-full h-64 bg-black">
+                <img src="${prod.img}" alt="${prod.nombre}" class="w-full h-full object-cover opacity-90 hover:opacity-100 transition-opacity" loading="lazy">
+            </div>
+            <div class="p-5 flex flex-col gap-2">
+                <div>
+                    <h3 class="font-black text-white text-xl leading-tight">${prod.nombre}</h3>
+                    <p class="text-sm text-gray-400 mt-1 line-clamp-2">${prod.desc}</p>
+                    ${opcionesHTML}
+                </div>
+                <div class="flex justify-between items-center mt-3 pt-3 border-t border-white/5">
+                    <span class="font-black text-[#ff6b00] text-2xl tracking-tighter">${precioDisplay}</span>
+                    ${btnAgregar}
                 </div>
             </div>
-        </div>
-    `).join('');
+        </div>`;
+    }).join('');
 
     if (window.lucide) lucide.createIcons();
 }
@@ -246,39 +289,53 @@ function actualizarTotalConEnvio() {
     }
 }
 
-function renderCartList() {
-    const listContainer = document.getElementById('cart-items-list');
-    if (!listContainer) return;
+function renderProducts(productosToRender) {
+    const catalog = document.getElementById('catalog-container');
+    if (!catalog) return;
 
-    if (cart.length === 0) {
-        listContainer.innerHTML = `<p class="text-center text-slate-400 py-4 text-sm">El carrito está vacío</p>`;
-        actualizarTotalConEnvio();
+    if (productosToRender.length === 0) {
+        catalog.innerHTML = `<div class="p-8 text-center text-slate-500"><i data-lucide="search-x" class="w-12 h-12 mx-auto mb-3 opacity-20"></i><p>No se encontraron productos.</p></div>`;
+        if (window.lucide) lucide.createIcons();
         return;
     }
 
-    listContainer.innerHTML = cart.map(item => `
-        <div class="flex justify-between items-center bg-white p-3 rounded-xl mb-2 shadow-sm">
-            <div class="flex-1">
-                <h4 class="font-bold text-slate-800 text-xs">${item.nombre}</h4>
-                <p class="text-[10px] text-slate-500">$ ${item.precio.toLocaleString()}</p>
+    // AHORA FORZAMOS A 1 SOLA COLUMNA SIEMPRE (grid-cols-1)
+    catalog.className = "grid grid-cols-1 gap-6 pb-24";
+
+    catalog.innerHTML = productosToRender.map(prod => {
+        let opcionesHTML = '';
+        let precioDisplay = `$ ${prod.precio.toLocaleString()}`;
+        
+        let btnAgregar = `<button type="button" onclick="addToCart(${prod.id})" class="h-10 px-5 flex items-center justify-center bg-[#ff6b00] text-black rounded-xl font-bold shadow-md hover:scale-105 active:scale-95 transition-all uppercase tracking-wide text-xs">Agregar <span class="text-lg leading-none ml-2 mb-0.5">+</span></button>`;
+
+        if (prod.opciones && prod.opciones.length > 0) {
+            precioDisplay = `Desde $${prod.opciones[0].precio.toLocaleString()}`;
+            opcionesHTML = `
+                <select id="opc-${prod.id}" class="mt-3 w-full bg-[#1a1a1a] border border-white/10 text-white text-sm py-2.5 px-3 rounded-xl focus:outline-none focus:border-[#ff6b00] transition-colors appearance-none">
+                    ${prod.opciones.map((op, i) => `<option value="${i}">${op.nombre} - $${op.precio.toLocaleString()}</option>`).join('')}
+                </select>
+            `;
+            btnAgregar = `<button type="button" onclick="addToCart(${prod.id}, document.getElementById('opc-${prod.id}').value)" class="h-10 px-5 flex items-center justify-center bg-[#ff6b00] text-black rounded-xl font-bold shadow-md hover:scale-105 active:scale-95 transition-all uppercase tracking-wide text-xs">Agregar <span class="text-lg leading-none ml-2 mb-0.5">+</span></button>`;
+        }
+
+        return `
+        <div class="bg-[#111] rounded-[2rem] overflow-hidden shadow-lg border border-white/5 flex flex-col">
+            <div class="relative w-full h-64 bg-black">
+                <img src="${prod.img}" alt="${prod.nombre}" class="w-full h-full object-cover opacity-90 hover:opacity-100 transition-opacity" loading="lazy">
             </div>
-            <div class="flex items-center gap-3">
-                <button onclick="changeQuantity(${item.id}, -1)" 
-                        class="w-8 h-8 flex items-center justify-center bg-[#ea580c] rounded-full shadow-sm text-white hover:scale-110 active:scale-90 transition-all">
-                    <span class="text-lg font-bold leading-none mb-0.5">−</span>
-                </button>
-
-                <span class="font-bold text-sm w-4 text-center text-slate-900">${item.cantidad}</span>
-
-                <button onclick="changeQuantity(${item.id}, 1)" 
-                        class="w-8 h-8 flex items-center justify-center bg-[#ea580c] rounded-full shadow-sm text-white hover:scale-110 active:scale-90 transition-all">
-                    <span class="text-lg font-bold leading-none mb-0.5">+</span>
-                </button>
+            <div class="p-5 flex flex-col gap-2">
+                <div>
+                    <h3 class="font-black text-white text-xl leading-tight">${prod.nombre}</h3>
+                    <p class="text-sm text-gray-400 mt-1 line-clamp-2">${prod.desc}</p>
+                    ${opcionesHTML}
+                </div>
+                <div class="flex justify-between items-center mt-3 pt-3 border-t border-white/5">
+                    <span class="font-black text-[#ff6b00] text-2xl tracking-tighter">${precioDisplay}</span>
+                    ${btnAgregar}
+                </div>
             </div>
-        </div>
-    `).join('');
+        </div>`;
+    }).join('');
 
-    actualizarTotalConEnvio();
-    // Si usas iconos de lucide en otras partes, esto los refresca
     if (window.lucide) lucide.createIcons();
 }

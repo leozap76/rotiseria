@@ -6,8 +6,8 @@
     <title>Digitallab - Catálogo Digital</title>
     
 
-    <link rel="apple-touch-icon" href="img/logoroti.webp">
-<link rel="icon" type="image/png" href="img/logoroti.webp">
+    <link rel="apple-touch-icon" href="img/favicon-menuya2.webp">
+<link rel="icon" type="image/png" href="img/favicon-menuya2.webp">
 <meta name="theme-color" content="#ea580c">
     
     <script src="https://cdn.tailwindcss.com"></script>
@@ -191,6 +191,17 @@ fbq('track', 'PageView');
                 <input type="text" id="cust-name" placeholder="Ej: Juan Pérez" 
                        class="w-full bg-[#0f0f0f] p-4 rounded-2xl border border-white/5 text-white placeholder:text-gray-600 focus:outline-none focus:border-[#ff6b00]/50 transition-all" required>
             </div>
+            <div class="space-y-3">
+    <input type="text" id="cust-receiver" placeholder="¿Quién recibe el pedido? (Ej: Leonardo)" 
+           class="w-full bg-slate-100 border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-[#ff6b00]">
+
+    <select id="cust-time" class="w-full bg-slate-100 border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-[#ff6b00]">
+        <option value="Lo Antes Posible">Lo Antes Posible</option>
+        <option value="En 30 min">En 30 min</option>
+        <option value="En 1 hora">En 1 hora</option>
+        <option value="Programar para más tarde">Programar para más tarde</option>
+    </select>
+</div>
 
             <div class="grid grid-cols-1 gap-5">
                 <div>
@@ -199,6 +210,7 @@ fbq('track', 'PageView');
                             class="w-full bg-[#0f0f0f] p-4 rounded-2xl border border-white/5 text-white focus:outline-none focus:border-[#ff6b00]/50 transition-all appearance-none cursor-pointer">
                         </select>
                 </div>
+                
 
                 <div>
                     <label class="block text-[11px] font-bold text-[#ff6b00] uppercase tracking-widest mb-2 ml-1">Dirección / Localidad</label>
