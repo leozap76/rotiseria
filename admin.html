@@ -83,21 +83,30 @@
                             <input type="text" id="conf-whatsapp" placeholder="Ej: 54911..." class="w-full p-4 rounded-2xl mt-1" oninput="saveConfig()">
                         </div>
                     </div>
-                    <div class="grid grid-cols-2 gap-4 mt-4">
-    <div>
-        <label class="text-xs text-orange-500 font-bold">TURNO MAÑANA</label>
-        <div class="flex gap-2">
-            <input type="time" id="apertura1" class="w-full p-2 rounded bg-zinc-900">
-            <input type="time" id="cierre1" class="w-full p-2 rounded bg-zinc-900">
+       <div class="mt-6 pt-4 border-t border-white/5">
+    <h3 class="text-[10px] font-bold text-[#ff6b00] uppercase tracking-widest mb-4">Horarios de Atención</h3>
+    
+    <div class="space-y-4">
+        <div class="bg-black/20 p-3 rounded-2xl border border-white/5">
+            <label class="text-[9px] text-gray-500 font-bold uppercase block mb-2">Turno Mañana</label>
+            <div class="grid grid-cols-2 gap-2">
+                <input type="time" id="apertura1" class="w-full text-xs p-2 rounded-lg bg-[#0f0f0f]">
+                <input type="time" id="cierre1" class="w-full text-xs p-2 rounded-lg bg-[#0f0f0f]">
+            </div>
+        </div>
+        
+        <div class="bg-black/20 p-3 rounded-2xl border border-white/5">
+            <label class="text-[9px] text-gray-500 font-bold uppercase block mb-2">Turno Noche</label>
+            <div class="grid grid-cols-2 gap-2">
+                <input type="time" id="apertura2" class="w-full text-xs p-2 rounded-lg bg-[#0f0f0f]">
+                <input type="time" id="cierre2" class="w-full text-xs p-2 rounded-lg bg-[#0f0f0f]">
+            </div>
         </div>
     </div>
-    <div>
-        <label class="text-xs text-orange-500 font-bold">TURNO NOCHE</label>
-        <div class="flex gap-2">
-            <input type="time" id="apertura2" class="w-full p-2 rounded bg-zinc-900">
-            <input type="time" id="cierre2" class="w-full p-2 rounded bg-zinc-900">
-        </div>
-    </div>
+
+    <button onclick="saveConfig()" class="w-full mt-4 bg-[#ff6b00] text-black text-[10px] font-black py-3 rounded-xl hover:scale-[1.02] transition-all uppercase">
+        Actualizar Datos de Tienda
+    </button>
 </div>
                 </section>
 
@@ -240,11 +249,10 @@
             document.getElementById('display-store-name').innerText = config.nombre;
         }
 
-       function saveConfig() {
+      function saveConfig() {
     const nuevaConfig = {
         nombre: document.getElementById('conf-nombre').value.toUpperCase(),
-        telefono: document.getElementById('conf-whatsapp').value,
-        // Agregamos los campos de horario
+        telefono: document.getElementById('conf-whatsapp').value, // Usamos telefono para el index
         horario: {
             turno1: { 
                 apertura: document.getElementById('apertura1').value || "11:00", 
@@ -257,10 +265,15 @@
         }
     };
 
-    // Guardar en Firebase
     db.ref('config').set(nuevaConfig)
         .then(() => {
-            Swal.fire("¡Guardado!", "Configuración y horarios actualizados", "success");
+            Swal.fire({
+                title: "¡Configuración Guardada!",
+                icon: "success",
+                background: "#1a1a1a",
+                color: "#fff",
+                confirmButtonColor: "#ff6b00"
+            });
         })
         .catch(err => console.error("Error:", err));
 }
@@ -456,8 +469,8 @@ function agregarProducto() {
                 <div class="overflow-hidden">
                     <p class="font-bold text-white text-sm truncate">${p.nombre}</p>
                     <p class="text-[10px] text-[#ff6b00] font-black tracking-widest uppercase mt-0.5">
-                        ${config.moneda} ${p.precio.toLocaleString()}
-                    </p>
+    $ ${p.precio.toLocaleString()}
+</p>
                 </div>
             </div>
 
