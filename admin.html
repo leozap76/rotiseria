@@ -55,7 +55,7 @@
 </div>
             <div class="flex gap-3">
                 <button onclick="descargarDataJS()" class="crazy-gradient text-black px-6 py-3 rounded-2xl font-bold flex items-center gap-2 shadow-lg shadow-orange-500/10 hover:scale-105 transition-all">
-                    <i data-lucide="save" class="w-5 h-5"></i> GENERAR DATA.JS
+                    <i data-lucide="save" class="w-5 h-5"></i> SINCRONIZAR
                 </button>
                 <button onclick="location.reload()" class="bg-white/5 p-3 rounded-2xl hover:bg-red-500/20 text-gray-500 hover:text-red-500 transition-all border border-white/5">
                     <i data-lucide="log-out"></i>
@@ -76,11 +76,11 @@
                     <div class="space-y-4">
                         <div>
                             <label class="text-[10px] text-gray-500 font-bold uppercase ml-1">Nombre del Local</label>
-                            <input type="text" id="conf-nombre" class="w-full p-4 rounded-2xl mt-1" oninput="saveConfig()">
+                            <input type="text" id="conf-nombre" class="w-full p-4 rounded-2xl mt-1" >
                         </div>
                         <div>
                             <label class="text-[10px] text-gray-500 font-bold uppercase ml-1">WhatsApp (con código de país)</label>
-                            <input type="text" id="conf-whatsapp" placeholder="Ej: 54911..." class="w-full p-4 rounded-2xl mt-1" oninput="saveConfig()">
+                            <input type="text" id="conf-whatsapp" placeholder="Ej: 54911..." class="w-full p-4 rounded-2xl mt-1">
                         </div>
                     </div>
        <div class="mt-6 pt-4 border-t border-white/5">
@@ -249,10 +249,10 @@
             document.getElementById('display-store-name').innerText = config.nombre;
         }
 
-      function saveConfig() {
+ function saveConfig() {
     const nuevaConfig = {
         nombre: document.getElementById('conf-nombre').value.toUpperCase(),
-        telefono: document.getElementById('conf-whatsapp').value, // Usamos telefono para el index
+        telefono: document.getElementById('conf-whatsapp').value,
         horario: {
             turno1: { 
                 apertura: document.getElementById('apertura1').value || "11:00", 
@@ -265,17 +265,14 @@
         }
     };
 
+    // Guardar en Firebase sin mostrar alertas (para que sea fluido)
     db.ref('config').set(nuevaConfig)
         .then(() => {
-            Swal.fire({
-                title: "¡Configuración Guardada!",
-                icon: "success",
-                background: "#1a1a1a",
-                color: "#fff",
-                confirmButtonColor: "#ff6b00"
-            });
+            console.log("Configuración actualizada automáticamente");
+            // Actualizamos el nombre arriba en tiempo real
+            document.getElementById('display-store-name').innerText = nuevaConfig.nombre;
         })
-        .catch(err => console.error("Error:", err));
+        .catch(err => console.error("Error al auto-guardar:", err));
 }
 
         // --- GESTIÓN DE IMÁGENES ---
@@ -306,16 +303,27 @@
 
         // --- CONEXIÓN CON LA NUBE (FIREBASE) ---
         function saveData() {
-            // Guardamos los productos en la nube
-            db.ref('productos').set(listaProductos)
-              .then(() => console.log("Sincronizado con Firebase"))
-              .catch(err => console.error("Error al guardar:", err));
-            
-            // Las zonas por ahora las seguimos guardando localmente como tenías
-            localStorage.setItem('crazy_zonas', JSON.stringify(listaZonas));
-            
-            renderUI();
-        }
+    // 1. Guardamos en Firebase
+    db.ref('productos').set(listaProductos)
+      .then(() => {
+          // 2. RECIÉN ACÁ, cuando la nube responde, mostramos el éxito
+          Swal.fire({
+              title: '¡Menú Actualizado!',
+              text: 'Los cambios ya se ven en el catálogo de los clientes.',
+              icon: 'success',
+              background: '#1a1a1a',
+              color: '#fff',
+              confirmButtonColor: '#ff6b00',
+              timer: 2000,
+              showConfirmButton: false
+          });
+          renderUI();
+      })
+      .catch(err => {
+          console.error("Error al sincronizar:", err);
+          Swal.fire('Error', 'No se pudo conectar con la nube', 'error');
+      });
+}
 
         function loadData() {
             // Escuchamos la nube en tiempo real
