@@ -285,28 +285,48 @@ fbq('track', 'PageView');
             cargarMenuDesdeNube(); // Empieza a escuchar los cambios en vivo
         });
 
-        function cargarTodoDesdeNube() {
-    // 1. ESCUCHAR PRODUCTOS (Lo que ya tenías)
-    db.ref('productos').on('value', (snapshot) => {
-        const data = snapshot.val();
-        productos = data ? Object.values(data) : [];
-        if (typeof renderProductos === 'function') renderProductos();
-    });
-
-    // 2. NUEVO: ESCUCHAR CONFIGURACIÓN
+       function cargarTodoDesdeNube() {
+    // 1. ESCUCHAR CONFIGURACIÓN (Nombre, Teléfono, Horarios)
     db.ref('config').on('value', (snapshot) => {
         const configNube = snapshot.val();
         if (configNube) {
-            // Reemplazamos la TIENDA_CONFIG que viene de data.js por la de la nube
-            window.TIENDA_CONFIG = configNube; 
-            
-            // Actualizamos los textos en la pantalla automáticamente
-            document.getElementById('store-name').innerText = configNube.nombre;
-            // Si tenés funciones que dependan del teléfono o horario, las llamás acá
-            if (typeof initApp === 'function') initApp(); 
+            window.TIENDA_CONFIG = configNube; // Actualiza la variable global
+
+            // Actualizar Nombre en el H1
+            const elNombre = document.getElementById('store-name');
+            if (elNombre) elNombre.innerText = configNube.nombre;
+
+            // Actualizar el Badge de Estado (Abierto/Cerrado)
+            // Esto vuelve a calcular si está abierto con los nuevos horarios de la nube
+            if (typeof actualizarEstadoTienda === 'function') {
+                actualizarEstadoTienda();
+            }
+
+            console.log("Configuración de la nube aplicada:", configNube.nombre);
+        }
+    });
+
+    // 2. ESCUCHAR PRODUCTOS
+    db.ref('productos').on('value', (snapshot) => {
+        const data = snapshot.val();
+        // Convertimos el objeto de Firebase en Array para que el catálogo lo entienda
+        productos = data ? Object.values(data) : [];
+        
+        console.log("Productos cargados:", productos.length);
+
+        // Renderizamos la interfaz
+        if (typeof renderProductos === 'function') {
+            renderProductos(); 
+        } else if (typeof initApp === 'function') {
+            initApp();
         }
     });
 }
+
+// Iniciar todo cuando cargue el DOM
+document.addEventListener('DOMContentLoaded', () => {
+    cargarTodoDesdeNube();
+});
 
 // Cambiá el listener del final por este:
 document.addEventListener('DOMContentLoaded', () => {

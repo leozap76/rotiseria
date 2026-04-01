@@ -83,6 +83,22 @@
                             <input type="text" id="conf-whatsapp" placeholder="Ej: 54911..." class="w-full p-4 rounded-2xl mt-1" oninput="saveConfig()">
                         </div>
                     </div>
+                    <div class="grid grid-cols-2 gap-4 mt-4">
+    <div>
+        <label class="text-xs text-orange-500 font-bold">TURNO MAÑANA</label>
+        <div class="flex gap-2">
+            <input type="time" id="apertura1" class="w-full p-2 rounded bg-zinc-900">
+            <input type="time" id="cierre1" class="w-full p-2 rounded bg-zinc-900">
+        </div>
+    </div>
+    <div>
+        <label class="text-xs text-orange-500 font-bold">TURNO NOCHE</label>
+        <div class="flex gap-2">
+            <input type="time" id="apertura2" class="w-full p-2 rounded bg-zinc-900">
+            <input type="time" id="cierre2" class="w-full p-2 rounded bg-zinc-900">
+        </div>
+    </div>
+</div>
                 </section>
 
                 <!-- 2. Form Producto -->
@@ -225,27 +241,28 @@
         }
 
        function saveConfig() {
-    // 1. Armamos el objeto con los datos de los inputs
     const nuevaConfig = {
         nombre: document.getElementById('conf-nombre').value.toUpperCase(),
-        whatsapp: document.getElementById('conf-whatsapp').value,
-        // Agregamos horarios (podés sacar los valores de inputs si los tenés, o dejarlos fijos por ahora)
+        telefono: document.getElementById('conf-whatsapp').value,
+        // Agregamos los campos de horario
         horario: {
-            turno1: { apertura: "11:00", cierre: "15:00" },
-            turno2: { apertura: "20:00", cierre: "02:00" }
+            turno1: { 
+                apertura: document.getElementById('apertura1').value || "11:00", 
+                cierre: document.getElementById('cierre1').value || "15:00" 
+            },
+            turno2: { 
+                apertura: document.getElementById('apertura2').value || "20:00", 
+                cierre: document.getElementById('cierre2').value || "02:00" 
+            }
         }
     };
 
-    // 2. Lo subimos a Firebase
+    // Guardar en Firebase
     db.ref('config').set(nuevaConfig)
-      .then(() => {
-          console.log("Configuración guardada en la nube");
-          document.getElementById('display-store-name').innerText = nuevaConfig.nombre;
-      })
-      .catch(err => console.error("Error al guardar config:", err));
-
-    // Opcional: seguimos guardando en localStorage para que el admin cargue rápido
-    localStorage.setItem('crazy_config', JSON.stringify(nuevaConfig));
+        .then(() => {
+            Swal.fire("¡Guardado!", "Configuración y horarios actualizados", "success");
+        })
+        .catch(err => console.error("Error:", err));
 }
 
         // --- GESTIÓN DE IMÁGENES ---
