@@ -1,9 +1,6 @@
 function initApp() {
     
-    // 1. PRIMERO REVISAMOS EL HORARIO (Para quitar el "Cargando" de inmediato)
-    checkStoreStatus();
-
-    // 2. CARGAMOS EL RESTO PROTEGIDO (Si algo falla aquí, no congelará la web)
+    // CARGAMOS EL RESTO PROTEGIDO (Si algo falla aquí, no congelará la web)
     try { 
         const storeName = document.getElementById('store-name');
         if (storeName) storeName.textContent = TIENDA_CONFIG.nombre; 
@@ -64,53 +61,44 @@ function renderCartList() {
 
 function checkStoreStatus() {
     try {
-        console.log("Verificando horarios v2..."); // Mensaje para verificar en consola
+        // Acceder a la configuración (usando window para asegurar referencia global)
+        const h = window.TIENDA_CONFIG?.horario;
+
+        // Función para saber si un turno es inactivo (vacío o 00:00)
+        const esInactivo = (t) => !t || !t.apertura || !t.cierre || (t.apertura === "00:00" && t.cierre === "00:00");
+
+        // REGLA: Si no hay horarios o son 00:00, la tienda está ABIERTA
+        if (!h || (esInactivo(h.turno1) && esInactivo(h.turno2))) {
+            updateStatusBadge(true, "");
+            return true;
+        }
+
         const ahora = new Date();
         const minActual = (ahora.getHours() * 60) + ahora.getMinutes();
 
-        // Verificamos si existe la configuración de DOS TURNOS en data.js
-        if (TIENDA_CONFIG.horario && TIENDA_CONFIG.horario.turno1) {
+        const estaEnRango = (turno) => {
+            if (esInactivo(turno)) return false;
+            const [hApe, mApe] = turno.apertura.split(':').map(Number);
+            const [hCie, mCie] = turno.cierre.split(':').map(Number);
+            const minApe = (hApe * 60) + mApe;
+            const minCie = (hCie * 60) + mCie;
             
-            const estaEnRango = (turno) => {
-                if (!turno || !turno.apertura || !turno.cierre) return false;
-                const [hApe, mApe] = turno.apertura.split(':').map(Number);
-                const [hCie, mCie] = turno.cierre.split(':').map(Number);
-                const minApe = (hApe * 60) + mApe;
-                const minCie = (hCie * 60) + mCie;
-                
-                if (minApe <= minCie) {
-                    return minActual >= minApe && minActual <= minCie;
-                } else {
-                    return minActual >= minApe || minActual <= minCie; // Cruce de medianoche
-                }
-            };
+            if (minApe <= minCie) return minActual >= minApe && minActual <= minCie;
+            return minActual >= minApe || minActual <= minCie; // Cruce de medianoche
+        };
 
-            const abiertoT1 = estaEnRango(TIENDA_CONFIG.horario.turno1);
-            const abiertoT2 = estaEnRango(TIENDA_CONFIG.horario.turno2);
-            const estaAbierto = abiertoT1 || abiertoT2;
+        const estaAbierto = estaEnRango(h.turno1) || estaEnRango(h.turno2);
 
-            // Calcular próximo horario
-            const [hA1, mA1] = TIENDA_CONFIG.horario.turno1.apertura.split(':').map(Number);
-            const [hA2, mA2] = TIENDA_CONFIG.horario.turno2.apertura.split(':').map(Number);
-            const minA1 = (hA1 * 60) + mA1;
-            const minA2 = (hA2 * 60) + mA2;
+        // Calcular próximo horario solo si está cerrado
+        let proximo = "";
+        if (!estaAbierto) {
+            if (!esInactivo(h.turno1)) proximo = h.turno1.apertura;
+            else if (!esInactivo(h.turno2)) proximo = h.turno2.apertura;
+        }
 
-            let proximo = "";
-            if (minActual < minA1) proximo = TIENDA_CONFIG.horario.turno1.apertura;
-            else if (minActual >= minA1 && minActual < minA2) proximo = TIENDA_CONFIG.horario.turno2.apertura;
-            else proximo = TIENDA_CONFIG.horario.turno1.apertura; // Siguiente día
-
-            updateStatusBadge(estaAbierto, proximo);
-            return estaAbierto;
-        } 
-        
-        // Si no hay configuración de 2 turnos, forzamos ABIERTO para no bloquear
-        updateStatusBadge(true, "");
-        return true;
-
+        updateStatusBadge(estaAbierto, proximo);
+        return estaAbierto;
     } catch (error) {
-        console.error("Error fatal validando horario:", error);
-        // SI OCURRE UN ERROR, QUITAMOS EL "CARGANDO" SÍ O SÍ
         updateStatusBadge(true, "");
         return true;
     }

@@ -88,7 +88,7 @@ fbq('track', 'PageView');
 
           <div class="w-28 h-28 rounded-full bg-[#1a1a1a] p-0.5 border border-white/10 shadow-[0_0_20px_rgba(255,107,0,0.2)]">
     <img id="store-logo" 
-         src="img/logoroti.webp" 
+         src="img/favicon-menuya2.webp" 
          class="w-full h-full rounded-full object-cover"
          onerror="this.src='https://placehold.co/200x200/1a1a1a/ff6b00?text=LOGO'">
 </div>
@@ -259,95 +259,81 @@ fbq('track', 'PageView');
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        // Función para escuchar la base de datos
-       function cargarMenuDesdeNube() {
-    db.ref('productos').on('value', (snapshot) => {
-        const data = snapshot.val();
-        
-        // Convertimos el objeto de Firebase en un array si es necesario
-        // y lo asignamos a la variable global
-        productos = data ? Object.values(data) : [];
-        
-        console.log("Datos recibidos de Firebase:", productos); // Esto te servirá para ver en la consola si llega el pancho
+        let configLoaded = false;
+        let productsLoaded = false;
 
-        // Forzamos el renderizado
-        if (typeof renderProductos === 'function') {
-            renderProductos(); 
-        } else if (typeof initApp === 'function') {
-            initApp();
+        function checkInitialLoad() {
+            if (configLoaded && productsLoaded) {
+                // Ocultar el cargador inicial si existe
+                const loader = document.getElementById('initial-loader');
+                if (loader) {
+                    loader.classList.add('hidden');
+                    loader.style.display = 'none';
+                }
+                initApp();
+            }
         }
-    });
-}
 
-        // 4. INICIO DE LA APP
-        document.addEventListener('DOMContentLoaded', () => {
-            initApp();             // Arranca tu app normal
-            cargarMenuDesdeNube(); // Empieza a escuchar los cambios en vivo
-        });
-
-       function cargarTodoDesdeNube() {
-    // 1. VALORES POR DEFECTO (Se ejecutan apenas carga la página)
-    // Esto evita que salga "undefined" mientras esperamos a Firebase
+function cargarTodoDesdeNube() {
+    // 1. VALORES POR DEFECTO
     window.TIENDA_CONFIG = {
         nombre: "Cargando...",
         telefono: "",
-        moneda: "$", // <-- Símbolo fijo aquí para evitar errores
+        moneda: "$", 
         horario: {
             turno1: { apertura: "00:00", cierre: "00:00" },
             turno2: { apertura: "00:00", cierre: "00:00" }
         }
     };
 
-    // 2. ESCUCHAR CONFIGURACIÓN (Nombre, Teléfono, Horarios)
-    db.ref('config').on('value', (snapshot) => {
-        const configNube = snapshot.val();
-        if (configNube) {
-            // Unimos los valores por defecto con los que vienen de la nube
-            window.TIENDA_CONFIG = { ...window.TIENDA_CONFIG, ...configNube };
-
-            // Actualizar Nombre en el H1
-            const elNombre = document.getElementById('store-name');
-            if (elNombre) elNombre.innerText = configNube.nombre;
-
-            // Actualizar el Badge de Estado (Abierto/Cerrado)
-            if (typeof actualizarEstadoTienda === 'function') {
-                actualizarEstadoTienda();
-            }
-            
-            // Si tenés una función que renderiza el carrito, la llamamos 
-            // para que actualice la moneda si estaba abierta
-            if (typeof renderCarrito === 'function') renderCarrito();
-
-            console.log("Configuración de la nube aplicada:", configNube.nombre);
+    // 2. ESCUCHAR CONFIGURACIÓN (Directo a la raíz)
+    db.ref('configuracion').on('value', (snapshot) => {
+        const configNube = snapshot.val() || {}; // Si no hay nada, usa un objeto vacío
+        
+        // ¡EL TRUCO ESTÁ ACÁ! Le sacamos el "window." para que ui.js y index.html usen la misma variable
+        TIENDA_CONFIG = { ...TIENDA_CONFIG, ...configNube };
+        
+        if (!TIENDA_CONFIG.nombre || TIENDA_CONFIG.nombre === "Cargando...") {
+            TIENDA_CONFIG.nombre = "MENU YA";
         }
+
+        // Actualizamos el H1
+        const elNombre = document.getElementById('store-name');
+        if (elNombre) elNombre.innerText = TIENDA_CONFIG.nombre;
+
+        // Actualizamos el reloj
+        try { 
+            if (typeof checkStoreStatus === 'function') checkStoreStatus(); 
+        } catch(e) { 
+            console.warn("Aviso: checkStoreStatus falló", e); 
+        }
+        
+        // ESTO AHORA SE EJECUTA SIEMPRE (Libera la carga)
+        configLoaded = true;
+        checkInitialLoad();
+        console.log("Configuración de la nube aplicada:", TIENDA_CONFIG.nombre);
     });
 
-    // 3. ESCUCHAR PRODUCTOS
+    // 3. ESCUCHAR PRODUCTOS (Directo a la raíz)
     db.ref('productos').on('value', (snapshot) => {
         const data = snapshot.val();
-        // Convertimos a Array y lo guardamos en la variable que usa tu catálogo
         productos = data ? (Array.isArray(data) ? data : Object.values(data)) : [];
-        
         console.log("Productos cargados:", productos.length);
 
-        // Renderizamos la interfaz según la función que use tu app
-        if (typeof renderProductos === 'function') {
-            renderProductos(); 
-        } else if (typeof initApp === 'function') {
-            initApp();
+        if (!productsLoaded) { 
+            productsLoaded = true;
+            checkInitialLoad();
+        } else {
+            if (typeof renderProducts === 'function') renderProducts(productos);
+            if (typeof renderCategories === 'function') renderCategories();
         }
     });
 }
 
-// Iniciar todo cuando cargue el DOM
-document.addEventListener('DOMContentLoaded', () => {
-    cargarTodoDesdeNube();
-});
-
-// Cambiá el listener del final por este:
-document.addEventListener('DOMContentLoaded', () => {
-    cargarTodoDesdeNube();
-});
+        // Iniciar todo cuando cargue el DOM
+        document.addEventListener('DOMContentLoaded', () => {
+            cargarTodoDesdeNube();
+        });
 
     </script>
 </body>

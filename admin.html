@@ -41,7 +41,7 @@
     <div id="admin-content" class="hidden max-w-7xl mx-auto pb-20">
         <header class="flex flex-col md:flex-row justify-between items-center mb-10 gap-4">
             <div>
-                <h1 class="text-4xl font-brand text-[#ff6b00] tracking-wider" id="display-store-name">ROTISERIA XL</h1>
+                <h1 class="text-4xl font-brand text-[#ff6b00] tracking-wider" id="display-store-name">La Rotiseria</h1>
                 <p class="text-gray-500 text-sm uppercase tracking-widest flex items-center gap-2">
                     <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span> Panel de Control Total
                 </p>
@@ -156,26 +156,32 @@
                 </section>
 
                 <!-- 3. Form Zonas -->
-         <section class="bg-[#1a1a1a] p-8 rounded-[2.5rem] border border-white/5 shadow-xl">
+        <section class="bg-[#1a1a1a] p-8 rounded-[2.5rem] border border-white/5 shadow-xl">
     <h2 class="text-xl font-bold mb-6 flex items-center gap-3">
         <i data-lucide="truck" class="text-[#ff6b00]"></i> Zonas de Envío
     </h2>
-    <form id="zone-form" class="space-y-4">
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-4">
-            <div>
-                <label class="text-[10px] text-gray-500 font-bold uppercase ml-1">Nombre del Barrio/Zona</label>
-                <input type="text" id="z-nombre" placeholder="Ej: Zona Centro" class="w-full p-4 rounded-2xl mt-1" required>
+    <form id="zone-form" class="space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+            
+            <div class="md:col-span-7">
+                <label class="text-[10px] text-gray-500 font-bold uppercase ml-1 tracking-widest">Nombre del Barrio / Zona</label>
+                <input type="text" id="z-nombre" placeholder="Ej: Zona Centro o Km 3" 
+                       class="w-full p-4 rounded-2xl mt-2 bg-black/20 border border-white/10 focus:border-[#ff6b00] outline-none transition-all" required>
             </div>
-            <div>
-                <label class="text-[10px] text-gray-500 font-bold uppercase ml-1">Costo ($)</label>
-                <input type="number" id="z-costo" placeholder="0" class="w-full p-4 rounded-2xl mt-1" required>
+
+            <div class="md:col-span-5">
+                <label class="text-[10px] text-gray-500 font-bold uppercase ml-1 tracking-widest">Costo de Envío ($)</label>
+                <input type="number" id="z-costo" placeholder="0" 
+                       class="w-full p-4 rounded-2xl mt-2 bg-black/20 border border-white/10 focus:border-[#ff6b00] outline-none transition-all" required>
             </div>
+            
         </div>
-        <button type="submit" class="w-full bg-[#ff6b00]/10 hover:bg-[#ff6b00] text-[#ff6b00] hover:text-black py-4 rounded-2xl font-black border border-[#ff6b00]/20 transition-all uppercase tracking-widest text-xs mt-2">
-            + Añadir Zona de Entrega
+
+        <button type="submit" class="w-full bg-[#ff6b00] text-black py-5 rounded-2xl font-black border border-[#ff6b00] hover:bg-transparent hover:text-[#ff6b00] transition-all uppercase tracking-[0.2em] text-xs shadow-[0_0_20px_rgba(255,107,0,0.2)]">
+            + Añadir Nueva Zona de Entrega
         </button>
     </form>
-</section>  
+</section> 
             </div>
 
             <!-- Columna Derecha: Listados -->
@@ -272,7 +278,7 @@
     };
 
     // Guardar en Firebase sin mostrar alertas (para que sea fluido)
-    db.ref('config').set(nuevaConfig)
+    db.ref('configuracion').set(nuevaConfig)
         .then(() => {
             console.log("Configuración actualizada automáticamente");
             // Actualizamos el nombre arriba en tiempo real
@@ -378,7 +384,7 @@ function agregarCategoria() {
     });
 
     // 3. Escuchar CONFIGURACIÓN (Nombre, Teléfono, etc.)
-    db.ref('config').on('value', (snapshot) => {
+    db.ref('configuracion').on('value', (snapshot) => {
         const c = snapshot.val();
         if (c) {
             document.getElementById('conf-nombre').value = c.nombre || "";
